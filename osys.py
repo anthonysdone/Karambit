@@ -1,5 +1,4 @@
 import time
-import random
 import sys
 
 class OSys: 
@@ -9,13 +8,6 @@ class OSys:
         self.screen = [[32] * self.SW for _ in range(self.SH)]
 
         self.keybuf = []
-
-        self.gw = 0
-        self.gh = 0
-        self.grid = []
-        self.next_grid = []
-
-        self.arr = [0] * 256
 
     def putc(self, regs):
         print(chr(regs[0]), end="")
@@ -55,52 +47,6 @@ class OSys:
             self.keybuf.append(10)
 
         regs[0] = self.keybuf.pop(0)
-
-    def gridset(self, regs): 
-        self.gw = regs[0]
-        self.gh = regs[1]
-        size = self.gw * self.gh
-        self.grid = [0] * size
-        self.next_grid = [0] * size
-
-    def gget(self, regs):
-        x, y = regs[0], regs[1]
-        if 0 <= x < self.gw and 0 <= y < self.gh: 
-            regs[0] = self.grid[y * self.gw + x]
-        else:
-            regs[0] = 0
-
-    def gset(self, regs):
-        x, y, val = regs[0], regs[1], regs[2]
-        if 0 <= x < self.gw and 0 <= y < self.gh: 
-            self.grid[y * self.gw + x] = 1 if val != 0 else 0
-    
-    def gnset(self, regs):
-        x, y, val = regs[0], regs[1], regs[2]
-        if 0 <= x < self.gw and 0 <= y < self.gh: 
-            self.next_grid[y * self.gw + x] = 1 if val != 0 else 0
-
-    def gswap(self): 
-        self.grid, self.next_grid = self.next_grid, self.grid
-        for i in range(len(self.next_grid)):
-            self.next_grid[i] = 0
-
-    def aget(self, regs):
-        idx = regs[0]
-        if 0 <= idx < 256:
-            regs[0] = self.arr[idx]
-        
-    def aset(self, regs):
-        idx, val = regs[0], regs[1]
-        if 0 <= idx < 256:
-            self.arr[idx] = val
-
-    def rand(self, regs):
-        max_val = regs[0]
-        if max_val > 0:
-            regs[0] = random.randint(0, max_val - 1)
-        else:
-            regs[0] = 0
     
     def handle(self, sysno, regs, mem): 
         if sysno == 0:          # PUTC
@@ -117,21 +63,5 @@ class OSys:
             self.sleep(regs)
         elif sysno == 6:        # KEY
             self.key(regs)
-        elif sysno == 10:       # GRIDSET
-            self.gridset(regs)
-        elif sysno == 11:       # GGET
-            self.gget(regs)
-        elif sysno == 12:       # GSET
-            self.gset(regs)
-        elif sysno == 13:       # GNSET
-            self.gnset(regs)
-        elif sysno == 14:       # GSWAP
-            self.gswap()
-        elif sysno == 20:       # AGET
-            self.aget(regs)
-        elif sysno == 21:       # ASET
-            self.aset(regs)
-        elif sysno == 22:       # RAND
-            self.rand(regs)
         else:
             print(f"Unknown system call: {sysno}")
